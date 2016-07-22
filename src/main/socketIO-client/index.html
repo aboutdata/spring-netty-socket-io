@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>聊天测试</title>
+    <link href="bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+        #console {
+            height: 400px;
+            overflow: auto;
+        }
+        .username-msg {
+            color: orange;
+        }
+        .connect-msg {
+            color: green;
+        }
+
+        .disconnect-msg {
+            color: red;
+        }
+
+        .send-msg {
+            color: #888
+        }
+    </style>
+
+    <script src="js/socket.io/socket.io.js"></script>
+    <script src="js/moment.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script>
+        //开启调试socketIO debug信息
+        localStorage.debug = '*';
+
+        var userName = 'user' + Math.floor((Math.random() * 1000) + 1);
+        var socket = io.connect('http://localhost:9527?token=wangkun');
+        socket.on('connect', function () {
+            var user = {
+                username: "zhangsan224",
+                rank: "0",
+                roomId: "7433"
+            };
+            socket.emit("joinRoom", user);
+            output('<span class="connect-msg">已经连接到服务器!</span>');
+        });
+
+        socket.on('message', function (data) {
+            output('<span class="username-msg">' + data.createTime + '+' + data.username + '+' + data.msgType + ':</span> ' + data.msgContent);
+        });
+
+        socket.on('disconnect', function () {
+            output('<span class="disconnect-msg">客户端失去连接!</span>');
+        });
+
+        function sendDisconnect() {
+            socket.disconnect();
+        }
+
+        function sendMessage() {
+            var message = $('#msg').val();
+            $('#msg').val('');
+
+            var jsonObject = {
+                userName: userName,
+                msgContent: message
+            };
+            socket.emit('message', jsonObject);
+        }
+
+        function output(message) {
+            var currentTime = "<span class='time'>" + moment().format('HH:mm:ss.SSS') + "</span>";
+            var element = $("<div>" + currentTime + " " + message + "</div>");
+            $('#console').prepend(element);
+        }
+
+        $(document).keydown(function (e) {
+            if (e.keyCode == 13) {
+                $('#send').click();
+            }
+        });
+    </script>
+</head>
+<body>
+<h1>聊天测试</h1>
+<br/>
+<div id="console" class="well">
+</div>
+
+<form class="well form-inline" onsubmit="return false;">
+    <input id="msg" class="input-xlarge" type="text" placeholder="输入聊天信息"/>
+    <button type="button" onClick="sendMessage()" class="btn" id="send">发送</button>
+    <button type="button" onClick="sendDisconnect()" class="btn">断开连接</button>
+</form>
+
+</body>
+
+</html>
